@@ -2,20 +2,27 @@ import sys
 import requests
 import threading
 from datetime import datetime
+from tkinter import messagebox
 
 class Downloader:
 	def __init__(self, url, threads, name=None, cli=False):
 
 		self.url = url
 		self.threads = threads
+		self.storedThreads = []
+		self.status = "waiting..."
 		
 		# HEAD request of the URL, returning only header information such as status code, etc.
 		try:
 			request = requests.head(url)
 		except:
 			if cli:
-				print('Request failed.')
-				sys.exit()
+				print('Error: Can not establish a connection.')
+			else:
+				messagebox.showerror("Error", "Can not establish a connection")
+
+			sys.exit()
+
 
 		# If name is passed, use it as the file name, otherwise extract the file name from the URL.
 		if name:
@@ -28,8 +35,12 @@ class Downloader:
 			file_size = int(request.headers['content-length'])
 		except:
 			if cli:
-				print('Error: invalid URL')
-				sys.exit()
+				print('Error: Can not download from this URL')
+			else:
+				messagebox.showerror("Error", "Can not download from this URL")
+
+			sys.exit()
+				
 
 		# Specify the size of the chunks used for multithreaded downloading.
 		self.part = int(file_size) / threads
@@ -40,6 +51,8 @@ class Downloader:
 		fp.close()
 
 	def download(self):
+
+		self.status = "downloading..."
 
 		# Create threads for each part of the download.
 		start_time = datetime.now()
@@ -52,17 +65,15 @@ class Downloader:
 			t.setDaemon(True) 
 			t.start()
 
+			self.storedThreads.append(t)
+
 		# Wait for all of the threads to finish downloading.
 		main_thread = threading.current_thread() 
-		for t in threading.enumerate(): 
-
-			if t is main_thread:
-				continue
-
-			t.join() 
+		for t in self.storedThreads:
+			t.join()
 
 		end_time = datetime.now()
-
+		self.status = "downloaded"
 		print(f'{self.file_name} downloaded in {(end_time - start_time).total_seconds()}')
 
 
@@ -79,3 +90,6 @@ class Downloader:
 			f.seek(int(start))
 			var = f.tell() 
 			f.write(request.content)
+
+	def __repr__(self):
+		return f"{self.file_name} {self.status}"
