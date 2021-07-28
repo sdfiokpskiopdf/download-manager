@@ -1,6 +1,7 @@
 import tkinter as tk
 from downloader import Downloader
 import multiprocessing
+import subprocess
 import threading
 import time
 import os
@@ -62,8 +63,9 @@ class ItemFrame(tk.Frame):
 
 			print("updating...")
 			for i, item in enumerate(reversed(self.items)):
-				tk.Label(self, text=f"{item.file_name}").grid(row=i, column=0)
-				tk.Label(self, text=f" {item.status}").grid(row=i, column=1)
+				tk.Label(self, text=f"{item.file_name[:25]}...").grid(row=i, column=0, padx=5)
+				tk.Label(self, text=f"{item.status}").grid(row=i, column=1)
+				tk.Button(self, text="📁", command=lambda i=item.file_path: subprocess.Popen(r'explorer /select,"{path}"'.format(path=i))).grid(row=i, column=2, padx=5)
 
 	def update(self):
 		while True:

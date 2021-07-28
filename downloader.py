@@ -47,7 +47,8 @@ class Downloader:
 		self.part = int(file_size) / threads
 
 		# Create a blank file the size of the content that will be downloaded.
-		fp = open(self.get_download_path() + "/" + self.file_name, 'w')
+		self.file_path = self.get_download_path() + "\\" + self.file_name
+		fp = open(self.file_path, 'w')
 		fp.write('%uFFFD' * file_size)
 		fp.close()
 
@@ -87,13 +88,13 @@ class Downloader:
 		request = requests.get(url, headers=headers, stream=True)
 
 		# Open the file and write the request content to it.
-		with open(self.get_download_path() + "/" + name, "r+b") as f: 
+		with open(self.file_path, "r+b") as f: 
 			f.seek(int(start))
 			var = f.tell() 
 			f.write(request.content)
 
 	def get_download_path(self):
-		
+
 	    # Returns the default downloads path for linux or windows
 	    if os.name == 'nt':
 	        import winreg
