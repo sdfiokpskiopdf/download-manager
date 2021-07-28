@@ -16,20 +16,26 @@ class AddFrame(tk.Frame):
 		self.variable.set(self.options[1])
 		self.text = tk.Label(self, text="Download from URL:")
 		self.urlEntry = tk.Entry(self)
+		self.nameText = tk.Label(self, text="Name of file:")
+		self.nameEntry = tk.Entry(self)
 		self.threadDrop = tk.OptionMenu(self, self.variable, *self.options)
 		self.downloadButton = tk.Button(self, text="Download", command=lambda: threading.Thread(target=self.download).start())
 
 		self.text.pack()
 		self.urlEntry.pack(pady=5, fill="x", expand=True)
+		self.nameText.pack()
+		self.nameEntry.pack(pady=5, fill="x", expand=True)
 		self.threadDrop.pack(fill="x", expand=True)
 		self.downloadButton.pack(pady=5, fill="x", expand=True)
 
 	def download(self):
 		url = self.urlEntry.get()
+		name = self.nameEntry.get()
 		threads = int(self.variable.get().split()[0])
-		self.urlEntry.delete(0, 'end')
 		self.variable.set(self.options[1])
-		d = Downloader(url, threads)
+		d = Downloader(url, threads, name)
+		self.urlEntry.delete(0, 'end')
+		self.nameEntry.delete(0, 'end')
 		threading.Thread(target=d.download).start()
 		self.parent.itemFrame.items.append(d)
 		self.parent.itemFrame.draw_items()
@@ -63,9 +69,14 @@ class ItemFrame(tk.Frame):
 
 			print("updating...")
 			for i, item in enumerate(reversed(self.items)):
-				tk.Label(self, text=f"{item.file_name[:25]}...").grid(row=i, column=0, padx=5)
+				if len(item.file_name) > 25:
+					fileName = item.file_name[:25] + "..."
+				else:
+					fileName = item.file_name
+				tk.Label(self, text=f"{fileName}").grid(row=i, column=0, padx=5)
 				tk.Label(self, text=f"{item.status}").grid(row=i, column=1)
 				tk.Button(self, text="📁", command=lambda i=item.file_path: subprocess.Popen(r'explorer /select,"{path}"'.format(path=i))).grid(row=i, column=2, padx=5)
+				tk.Label(self, text=f"{item.file_size}").grid(row=i, column=3)
 
 	def update(self):
 		while True:
