@@ -7,12 +7,17 @@ from datetime import datetime
 from tkinter import messagebox
 
 class Downloader:
-	def __init__(self, url, threads, name=None, cli=False):
+	def __init__(self, url, threads, name=None, download_path=None, cli=False):
 
 		self.url = url
 		self.threads = threads
 		self.storedThreads = []
 		self.status = "waiting..."
+
+		if download_path:
+			self.downloadPath = download_path.replace("/", "\\")
+		else:
+			self.downloadPath = self.get_download_path()
 		
 		# HEAD request of the URL, returning only header information such as status code, etc.
 		try:
@@ -54,7 +59,8 @@ class Downloader:
 		self.part = int(file_size) / threads
 
 		# Create a blank file the size of the content that will be downloaded.
-		self.file_path = self.get_download_path() + "\\" + self.file_name
+		print(self.downloadPath)
+		self.file_path = self.downloadPath + "\\" + self.file_name
 		fp = open(self.file_path, 'w')
 		fp.write('%uFFFD' * file_size)
 		fp.close()

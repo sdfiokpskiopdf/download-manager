@@ -1,4 +1,5 @@
 import tkinter as tk
+import tkinter.filedialog
 from downloader import Downloader
 import multiprocessing
 import subprocess
@@ -10,6 +11,7 @@ class AddFrame(tk.Frame):
 	def __init__(self, parent, *args, **kwargs):
 		tk.Frame.__init__(self, parent, *args, **kwargs)
 		self.parent = parent
+		self.download_path = None
 
 		self.options = [str(i) + " Threads" for i in range(1, multiprocessing.cpu_count()+1)]
 		self.variable = tk.StringVar(self)
@@ -19,26 +21,35 @@ class AddFrame(tk.Frame):
 		self.nameText = tk.Label(self, text="Name of file:")
 		self.nameEntry = tk.Entry(self)
 		self.threadDrop = tk.OptionMenu(self, self.variable, *self.options)
-		self.downloadButton = tk.Button(self, text="Download", command=lambda: threading.Thread(target=self.download).start())
+		self.setButton = tk.Button(self, text="📁 Download Location", command=lambda: threading.Thread(target=self.set_location).start())
+		self.downloadButton = tk.Button(self, text="Download", height=2, command=lambda: threading.Thread(target=self.download).start())
 
-		self.text.pack()
-		self.urlEntry.pack(pady=5, fill="x", expand=True)
-		self.nameText.pack()
-		self.nameEntry.pack(pady=5, fill="x", expand=True)
-		self.threadDrop.pack(fill="x", expand=True)
-		self.downloadButton.pack(pady=5, fill="x", expand=True)
+		self.text.grid(row=0, column=0)
+		self.urlEntry.grid(row=0, column=1, columnspan=2, sticky="ew")
+		self.nameText.grid(row=1, column=0)
+		self.nameEntry.grid(row=1, column=1, columnspan=2, sticky="ew", pady=5)
+		self.threadDrop.grid(row=2, column=0, sticky="ew")
+		self.setButton.grid(row=2, column=1, columnspan=2, sticky="ew")
+		self.downloadButton.grid(row=3, column=0, columnspan=3, sticky="ew", pady=5)
+
+		for i in range(3):
+			self.grid_rowconfigure(i, weight=1)
+			self.grid_columnconfigure(i, weight=1)
 
 	def download(self):
 		url = self.urlEntry.get()
 		name = self.nameEntry.get()
 		threads = int(self.variable.get().split()[0])
 		self.variable.set(self.options[1])
-		d = Downloader(url, threads, name)
+		d = Downloader(url, threads, name, self.download_path)
 		self.urlEntry.delete(0, 'end')
 		self.nameEntry.delete(0, 'end')
 		threading.Thread(target=d.download).start()
 		self.parent.itemFrame.items.append(d)
 		self.parent.itemFrame.draw_items()
+
+	def set_location(self):
+		self.download_path = tk.filedialog.askdirectory()
 
 class ItemFrame(tk.Frame):
 	def __init__(self, parent, *args, **kwargs):
@@ -101,6 +112,6 @@ if __name__ == '__main__':
 	root = tk.Tk()
 	root.protocol("WM_DELETE_WINDOW", on_closing)
 	root.title("Download Manager")
-	root.geometry('400x600')
+	root.geometry('500x300')
 	MainApplication(root).pack(side='top', fill='both', expand=True)
 	root.mainloop()
