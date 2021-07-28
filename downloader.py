@@ -1,3 +1,4 @@
+import os
 import sys
 import requests
 import threading
@@ -46,7 +47,7 @@ class Downloader:
 		self.part = int(file_size) / threads
 
 		# Create a blank file the size of the content that will be downloaded.
-		fp = open(self.file_name, 'w')
+		fp = open(self.get_download_path() + "/" + self.file_name, 'w')
 		fp.write('%uFFFD' * file_size)
 		fp.close()
 
@@ -86,10 +87,23 @@ class Downloader:
 		request = requests.get(url, headers=headers, stream=True)
 
 		# Open the file and write the request content to it.
-		with open(name, "r+b") as f: 
+		with open(self.get_download_path() + "/" + name, "r+b") as f: 
 			f.seek(int(start))
 			var = f.tell() 
 			f.write(request.content)
+
+	def get_download_path(self):
+		
+	    # Returns the default downloads path for linux or windows
+	    if os.name == 'nt':
+	        import winreg
+	        sub_key = r'SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Shell Folders'
+	        downloads_guid = '{374DE290-123F-4565-9164-39C4925E467B}'
+	        with winreg.OpenKey(winreg.HKEY_CURRENT_USER, sub_key) as key:
+	            location = winreg.QueryValueEx(key, downloads_guid)[0]
+	        return location
+	    else:
+	        return os.path.join(os.path.expanduser('~'), 'downloads')
 
 	def __repr__(self):
 		return f"{self.file_name} {self.status}"
