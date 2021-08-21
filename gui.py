@@ -41,7 +41,7 @@ class AddFrame(tk.Frame):
 		name = self.nameEntry.get()
 		threads = int(self.variable.get().split()[0])
 		self.variable.set(self.options[1])
-		d = Downloader(url, threads, name, self.download_path)
+		d = Downloader(url, threads, name, self.download_path, gui=True)
 		self.urlEntry.delete(0, 'end')
 		self.nameEntry.delete(0, 'end')
 		threading.Thread(target=d.download).start()

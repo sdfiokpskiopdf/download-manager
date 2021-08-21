@@ -7,7 +7,7 @@ from datetime import datetime
 from tkinter import messagebox
 
 class Downloader:
-	def __init__(self, url, threads, name=None, download_path=None, cli=False):
+	def __init__(self, url, threads, name=None, download_path=None, cli=False, gui=False):
 
 		self.url = url
 		self.threads = threads
@@ -22,18 +22,21 @@ class Downloader:
 		# HEAD request of the URL, returning only header information such as status code, etc.
 		try:
 			request = requests.head(url)
+			self.request = request
 		except:
 			if cli:
 				print('Error: Can not establish a connection.')
-			else:
+			elif gui:
 				messagebox.showerror("Error", "Can not establish a connection")
+			else:
+				pass
 
 			sys.exit()
 
 
 		# If name is passed, use it as the file name, otherwise extract the file name from the URL.
 		if name:
-			if "." not in name and not cli:
+			if "." not in name and gui:
 				messagebox.showerror("Error", "Please include a file extension in your file name.")
 				sys.exit()
 			else:
@@ -45,12 +48,13 @@ class Downloader:
 		try:
 			file_size = int(request.headers['content-length'])
 			self.file_size = self.convert_size(file_size)
-		except Exception as e:
+		except:
 			if cli:
 				print('Error: Can not download from this URL')
-			else:
-				print(e)
+			elif gui:
 				messagebox.showerror("Error", "Can not download from this URL")
+			else:
+				pass
 
 			sys.exit()
 				
@@ -59,7 +63,6 @@ class Downloader:
 		self.part = int(file_size) / threads
 
 		# Create a blank file the size of the content that will be downloaded.
-		print(self.downloadPath)
 		self.file_path = self.downloadPath + "\\" + self.file_name
 		fp = open(self.file_path, 'w')
 		fp.write('%uFFFD' * file_size)
@@ -84,12 +87,12 @@ class Downloader:
 
 		# Wait for all of the threads to finish downloading.
 		main_thread = threading.current_thread() 
+		self.t_length = len(self.storedThreads)
 		for t in self.storedThreads:
 			t.join()
 
 		end_time = datetime.now()
 		self.status = "downloaded"
-		print(f'{self.file_name} downloaded in {(end_time - start_time).total_seconds()}')
 
 
 	def handler(self, start, end, url, name):
@@ -122,6 +125,8 @@ class Downloader:
 	def convert_size(self, size_bytes):
 		if size_bytes == 0:
 			return "0B"
+		elif size_bytes < 0 or size_bytes > 1_210_000_000_000_000_000_000_000_000:
+			raise ValueError
 		size_name = ("B", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB")
 		i = int(math.floor(math.log(size_bytes, 1024)))
 		p = math.pow(1024, i)
@@ -130,3 +135,9 @@ class Downloader:
 
 	def __repr__(self):
 		return f"{self.file_name} {self.status}"
+
+
+if __name__ == "__main__":
+	print("This file is not intended to be ran. Please run either gui.py or cli.py")
+	input("Press any key to quit the program...")
+	sys.exit()
